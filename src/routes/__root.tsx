@@ -1,7 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-
-import appCss from '../styles.css?url'
+import { AppNav } from '../components/AppNav'
+import '../styles.css'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -15,12 +15,6 @@ export const Route = createRootRoute({
       },
       {
         title: 'Hockey Ops Directory',
-      },
-    ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
       },
     ],
   }),
@@ -37,7 +31,11 @@ function RootDocument({ children }: { children: ReactNode }) {
         <header>
           <p>Hockey Ops Directory</p>
         </header>
+
+        <AppNav />
+
         {children}
+
         <Scripts />
       </body>
     </html>
