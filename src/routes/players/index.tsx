@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/players/')({
   component: PlayersIndexPage,
@@ -17,9 +17,21 @@ function PlayersIndexPage() {
       </p>
 
       <ul className="mt-4 list-disc space-y-1 pl-5 text-slate-700">
-        <li>Placeholder player row — A. Forward</li>
-        <li>Placeholder player row — B. Defense</li>
-        <li>Placeholder player row — C. Goalie</li>
+        <li>
+          <Link to="/players/$playerId" params={{ playerId: '42' }}>
+            A. Forward
+          </Link>
+        </li>
+        <li>
+          <Link to="/players/$playerId" params={{ playerId: '7' }}>
+            B. Defense
+          </Link>
+        </li>
+        <li>
+          <Link to="/players/$playerId" params={{ playerId: '1' }}>
+            C. Goalie
+          </Link>
+        </li>
       </ul>
     </main>
   )
