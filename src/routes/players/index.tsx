@@ -4,14 +4,19 @@ import {
   type PlayersSearch,
   validatePlayersSearch,
 } from '../../lib/searchSchemas'
+import { listPlayers } from '../../server/directoryLoader'
 
 export const Route = createFileRoute('/players/')({
   validateSearch: (search) => validatePlayersSearch(search),
+  loader: ({ location }) => {
+    return listPlayers(validatePlayersSearch(location.search))
+  },
   component: PlayersIndexPage,
 })
 
 function PlayersIndexPage() {
   const search = Route.useSearch()
+  const players = Route.useLoaderData()
 
   const setPosition = (position: PlayersSearch['position']) =>
     (prev: Partial<PlayersSearch> = {}): PlayersSearch => ({
@@ -35,7 +40,7 @@ function PlayersIndexPage() {
 
       <p className="mt-2 text-slate-600">
         Roster directory index for hockey operations staff.
-        Each player will get a bookmarkable detail page next.
+        Each player has a bookmarkable detail page.
       </p>
 
       <div className="mt-6 space-y-4">
@@ -69,21 +74,13 @@ function PlayersIndexPage() {
       </div>
 
       <ul className="mt-4 list-disc space-y-1 pl-5 text-slate-700">
-        <li>
-          <Link to="/players/$playerId" params={{ playerId: '42' }}>
-            A. Forward
-          </Link>
-        </li>
-        <li>
-          <Link to="/players/$playerId" params={{ playerId: '7' }}>
-            B. Defense
-          </Link>
-        </li>
-        <li>
-          <Link to="/players/$playerId" params={{ playerId: '1' }}>
-            C. Goalie
-          </Link>
-        </li>
+        {players.map((player) => (
+          <li key={player.id}>
+            <Link to="/players/$playerId" params={{ playerId: player.id }}>
+              #{player.number} {player.name} — {player.position}
+            </Link>
+          </li>
+        ))}
       </ul>
     </main>
   )

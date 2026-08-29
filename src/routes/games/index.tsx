@@ -4,14 +4,19 @@ import {
   type GamesSearch,
   validateGamesSearch,
 } from '../../lib/searchSchemas'
+import { listGames } from '../../server/directoryLoader'
 
 export const Route = createFileRoute('/games/')({
   validateSearch: (search) => validateGamesSearch(search),
+  loader: ({ location }) => {
+    return listGames(validateGamesSearch(location.search))
+  },
   component: GamesIndexPage,
 })
 
 function GamesIndexPage() {
   const search = Route.useSearch()
+  const games = Route.useLoaderData()
 
   const setTeam = (team: string) =>
     (prev: Partial<GamesSearch> = {}): GamesSearch => ({
@@ -68,9 +73,13 @@ function GamesIndexPage() {
         </p>
       </div>
 
-      <p className="mt-4 rounded-md bg-slate-100 p-3 text-sm text-slate-700">
-        Placeholder: no game rows loaded yet.
-      </p>
+      <ul className="mt-4 list-disc space-y-1 pl-5 text-slate-700">
+        {games.map((game) => (
+          <li key={game.id}>
+            {game.date} · {game.opponent} · {game.venue === 'home' ? 'Home' : 'Away'} · {game.status}
+          </li>
+        ))}
+      </ul>
     </main>
   )
 }
