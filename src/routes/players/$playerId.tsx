@@ -20,6 +20,7 @@ function PlayerDetailPage() {
     <main className="mx-auto max-w-3xl p-6">
       <Link
         to="/players"
+        search={{ position: 'all', status: 'active' }}
         className="text-sm font-medium text-slate-600 underline underline-offset-4"
       >
         Back to players
