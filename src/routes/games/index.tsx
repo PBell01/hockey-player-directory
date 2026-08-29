@@ -73,13 +73,28 @@ function GamesIndexPage() {
         </p>
       </div>
 
-      <ul className="mt-4 list-disc space-y-1 pl-5 text-slate-700">
-        {games.map((game) => (
-          <li key={game.id}>
-            {game.date} · {game.opponent} · {game.venue === 'home' ? 'Home' : 'Away'} · {game.status}
-          </li>
-        ))}
-      </ul>
+      {games.length === 0 ? (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-5 text-slate-700">
+          <h2 className="text-lg font-semibold text-slate-900">No games match these filters</h2>
+          <p className="mt-2">Try clearing the current filters or browse the roster to find a player.</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link to="/games" search={clearFilters} className="font-medium text-sky-700 underline underline-offset-4">
+              Clear filters
+            </Link>
+            <Link to="/players" search={{ position: 'all', status: 'active' }} className="font-medium text-sky-700 underline underline-offset-4">
+              Go to players
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-slate-700">
+          {games.map((game) => (
+            <li key={game.id}>
+              {game.date} · {game.opponent} · {game.venue === 'home' ? 'Home' : 'Away'} · {game.status}
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   )
 }
