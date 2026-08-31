@@ -3,6 +3,7 @@ dist/
 .output/
 .vinxi/
 .vercel/
+.tanstack/
 
 # Never commit real env files
 .env
