@@ -1,13 +1,14 @@
-node_modules
-.DS_Store
-dist
-dist-ssr
-*.local
+node_modules/
+dist/
+.output/
+.vinxi/
+.vercel/
+
+# Never commit real env files
 .env
-.nitro
-.tanstack
-.wrangler
-.output
-.vinxi
-__unconfig*
-todos.json
+.env.local
+.env.*.local
+
+# OS / editor noise
+.DS_Store
+*.log
