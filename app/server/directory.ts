@@ -2,6 +2,13 @@
 
 import { createServerFn } from '@tanstack/react-start'
 import { getSupabaseServerClient } from '../lib/supabase.server'
+import {
+  mapDirectoryRow,
+  type DirectoryEntry,
+  type DirectoryRow,
+} from '../lib/directory/mappers'
+
+export type { DirectoryEntry } from '../lib/directory/mappers'
 
 export type DirectoryRole = 'player' | 'staff' | 'all'
 
@@ -9,16 +16,6 @@ export type DirectoryInput = {
   search?: string
   role?: DirectoryRole
   limit?: number
-}
-
-export type DirectoryEntry = {
-  id: string
-  name: string
-  role: Exclude<DirectoryRole, 'all'>
-  position: 'F' | 'D' | 'G' | null
-  number: number | null
-  team: string
-  status: 'active' | 'ir' | 'inactive'
 }
 
 export type DirectorySuccess = {
@@ -36,39 +33,12 @@ export type DirectoryError = {
 
 export type DirectoryResponse = DirectorySuccess | DirectoryError
 
-type DirectoryRow = {
-  id: string
-  full_name: string
-  role: 'player' | 'staff'
-  position_or_title: string
-  jersey_number: number | string | null
-  team_name: string | null
-  is_active: boolean
-}
-
 const DEFAULT_LIMIT = 25
 const MAX_SEARCH_LENGTH = 100
 const MAX_LIMIT = 100
 
 function escapeSearchTerm(value: string): string {
   return value.replace(/[\\%_(),"]/g, '\\$&')
-}
-
-function mapDirectoryRow(row: DirectoryRow): DirectoryEntry {
-  const position = ['F', 'D', 'G'].includes(row.position_or_title)
-    ? (row.position_or_title as DirectoryEntry['position'])
-    : null
-  const jerseyNumber = row.jersey_number === null ? null : Number(row.jersey_number)
-
-  return {
-    id: row.id,
-    name: row.full_name,
-    role: row.role,
-    position,
-    number: Number.isFinite(jerseyNumber) ? jerseyNumber : null,
-    team: row.team_name ?? '',
-    status: row.is_active ? 'active' : 'inactive',
-  }
 }
 
 function validateDirectoryInput(input: unknown): DirectoryInput {
