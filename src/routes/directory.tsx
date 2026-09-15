@@ -27,8 +27,31 @@ export const Route = createFileRoute('/directory')({
   validateSearch: (search) => validateDirectorySearch(search),
   loader: ({ location }) =>
     getDirectoryEntries({ data: validateDirectorySearch(location.search) }),
+  pendingComponent: DirectoryLoadingState,
+  errorComponent: DirectoryLoadError,
   component: DirectoryPage,
 })
+
+function DirectoryLoadingState() {
+  return (
+    <main className="mx-auto max-w-5xl p-6">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-slate-600">
+        Loading directory entries...
+      </div>
+    </main>
+  )
+}
+
+function DirectoryLoadError() {
+  return (
+    <main className="mx-auto max-w-5xl p-6">
+      <div className="rounded-lg border border-rose-200 bg-rose-50 p-5 text-rose-900">
+        <h1 className="font-semibold">Directory unavailable</h1>
+        <p className="mt-1 text-sm">Please try again shortly.</p>
+      </div>
+    </main>
+  )
+}
 
 function DirectoryPage() {
   const search = Route.useSearch()
