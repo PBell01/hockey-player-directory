@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import type { FormEvent } from 'react'
 import {
   getDirectoryEntries,
   type DirectoryRole,
@@ -25,8 +26,8 @@ function validateDirectorySearch(search: Record<string, unknown>): DirectorySear
 
 export const Route = createFileRoute('/directory')({
   validateSearch: (search) => validateDirectorySearch(search),
-  loader: ({ location }) =>
-    getDirectoryEntries({ data: validateDirectorySearch(location.search) }),
+  loaderDeps: ({ search }) => search,
+  loader: ({ deps }) => getDirectoryEntries({ data: deps }),
   pendingComponent: DirectoryLoadingState,
   errorComponent: DirectoryLoadError,
   component: DirectoryPage,
@@ -56,6 +57,21 @@ function DirectoryLoadError() {
 function DirectoryPage() {
   const search = Route.useSearch()
   const response = Route.useLoaderData()
+  const navigate = Route.useNavigate()
+
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    const formData = new FormData(event.currentTarget)
+    const nextSearch = String(formData.get('search') ?? '').trim()
+
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        search: nextSearch,
+      }),
+    })
+  }
 
   return (
     <main className="mx-auto max-w-5xl p-6">
@@ -96,6 +112,27 @@ function DirectoryPage() {
           </Link>
         </div>
       </div>
+
+      <form className="mt-6 flex flex-wrap gap-2" onSubmit={submitSearch}>
+        <label className="sr-only" htmlFor="directory-search">
+          Search directory
+        </label>
+        <input
+          key={search.search}
+          id="directory-search"
+          name="search"
+          type="search"
+          defaultValue={search.search}
+          placeholder="Search by name or team"
+          className="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none ring-sky-500 placeholder:text-slate-400 focus:ring-2 sm:min-w-64"
+        />
+        <button
+          type="submit"
+          className="rounded-md bg-sky-700 px-4 py-2 font-medium text-white shadow-sm hover:bg-sky-800"
+        >
+          Search
+        </button>
+      </form>
 
       {!response.ok ? (
         <div className="mt-8 rounded-lg border border-rose-200 bg-rose-50 p-5 text-rose-900">
