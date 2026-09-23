@@ -44,6 +44,105 @@ export type Database = {
         }
         Relationships: []
       }
+      games: {
+        Row: {
+          created_at: string
+          game_date: string
+          home_away_status: string | null
+          id: string
+          opponent: string
+          venue: string | null
+        }
+        Insert: {
+          created_at?: string
+          game_date: string
+          home_away_status?: string | null
+          id?: string
+          opponent: string
+          venue?: string | null
+        }
+        Update: {
+          created_at?: string
+          game_date?: string
+          home_away_status?: string | null
+          id?: string
+          opponent?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
+      players: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          position: string
+          team_org_label: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          position: string
+          team_org_label: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: string
+          team_org_label?: string
+        }
+        Relationships: []
+      }
+      scouting_events: {
+        Row: {
+          clock_time: string | null
+          created_at: string
+          event_type: string
+          game_id: string
+          id: string
+          notes: string | null
+          period: number | null
+          player_id: string
+        }
+        Insert: {
+          clock_time?: string | null
+          created_at?: string
+          event_type: string
+          game_id: string
+          id?: string
+          notes?: string | null
+          period?: number | null
+          player_id: string
+        }
+        Update: {
+          clock_time?: string | null
+          created_at?: string
+          event_type?: string
+          game_id?: string
+          id?: string
+          notes?: string | null
+          period?: number | null
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scouting_events_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scouting_events_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
