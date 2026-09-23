@@ -2,8 +2,8 @@
 
 ## Migration applied
 - File: supabase/migrations/001_scouting_schema.sql
-- Applied via: [Supabase Dashboard SQL editor | supabase db push]
-- Project: [project name / ref — no keys]
+- Applied via: Supabase Dashboard SQL editor
+- Project: ybcshwqzlhgvgvgqlvua
 
 ## Typegen command
 - Command: `npx supabase gen types typescript --project-id [REF] > src/types/database.ts`
