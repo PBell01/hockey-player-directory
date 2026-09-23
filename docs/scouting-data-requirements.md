@@ -7,6 +7,8 @@
 | Scout | Review player performance and observations | Player records, games, events, filters, and per-player totals that remain correctly connected. |
 | Hockey operations user | Find relevant scouting information quickly | Player lists, game lists, and event views filtered by position, team/org label, date, player, or game. |
 | Ops/data steward | Maintain consistent reference data and protect joins as the schema changes | Clear player/game/event relationships, stable identifiers, and type-safe data access paths that reveal incompatible schema changes. |
+**Out of scope for this sprint:** public fan apps, payments, live video, and fantasy features.
+
 
 ## 2. Core entities and relationships (plain language)
 
@@ -65,10 +67,5 @@ Relevant player and event data must support create and update operations through
 
 ## 6. Source of truth
 
-The authoritative records are the project’s player, game, and event data. Relationships must be based on the stored references between those records, not on copied or matching names.
+This brief is the requirements source of truth for the Northline scouting data work. Later schema design, queries, RPCs, migrations, cache invalidation, and acceptance checks must trace back to the actors, entities, filters, and success criteria defined in this document. If a later implementation decision expands or changes the requirements, this brief must be updated first.
 
-The source of truth must provide the fields needed to identify players and games, associate each event with exactly one player and one game, apply the required filters, calculate per-player aggregates, and support the required player and event changes through type-safe data-access paths.
-
-When the schema evolves, the authoritative field definitions and relationships must remain aligned with the typed data-access expectations. A view or aggregate is correct only when it can be traced back to the authoritative player, game, and event records.
-
-Public fan applications, payments, live video, and fantasy features are out of scope for this project.
