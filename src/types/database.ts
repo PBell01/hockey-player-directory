@@ -76,6 +76,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          notes: string | null
           position: string
           team_org_label: string
         }
@@ -83,6 +84,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          notes?: string | null
           position: string
           team_org_label: string
         }
@@ -90,6 +92,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          notes?: string | null
           position?: string
           team_org_label?: string
         }
