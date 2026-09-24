@@ -1,17 +1,13 @@
 import { supabase } from '../supabase/client'
+import type { Database } from '../../types/database'
 
-export type PlayerEventCountRow = {
-  player_id: string
-  player_name: string
-  event_count: number
-  goal_count: number
-}
+export type PlayerEventCountRow =
+  Database['public']['Functions']['player_event_counts_for_game']['Returns'][number]
 
 export async function getPlayerEventCountsForGame(
   gameId: string,
 ): Promise<PlayerEventCountRow[]> {
   const { data, error } = await supabase.rpc(
-    // @ts-expect-error Regenerate database.ts after applying the RPC migration.
     'player_event_counts_for_game',
     { p_game_id: gameId },
   )
