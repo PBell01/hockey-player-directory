@@ -10,7 +10,7 @@ The implementation is not ready for full stakeholder handoff yet. The developmen
 
 ## In-scope entities and relationships
 
-The data model contains exactly these core scouting entities:
+The core scouting entities for this board are:
 
 - **Player:** A skater or goalie Northline tracks.
 - **Game:** A contest on a particular date between sides.
