@@ -125,3 +125,5 @@ This workflow makes schema drift visible at the type boundary instead of allowin
 Next work may add approved test data access, complete runtime acceptance verification, and design auth-aware reads and writes. It should not bypass `src/lib/scouting/*`, add direct route-level Supabase calls, or treat the current empty-database waiver as a successful live-data result.
 
 Do not expand this handoff into public fan applications, payments, live video, fantasy features, or unrelated product workflows. Keep the work focused on a typed, correctly joined scouting board that can evolve without silently breaking.
+
+
