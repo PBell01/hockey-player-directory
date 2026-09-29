@@ -1,5 +1,6 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useState, type ReactNode } from 'react'
 import { AppNav } from '../components/AppNav'
 import '../styles.css'
 
@@ -22,20 +23,23 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient())
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body className="font-sans antialiased">
-        <header>
-          <p>Hockey Ops Directory</p>
-        </header>
+        <QueryClientProvider client={queryClient}>
+          <header>
+            <p>Hockey Ops Directory</p>
+          </header>
 
-        <AppNav />
+          <AppNav />
 
-        {children}
-
+          {children}
+        </QueryClientProvider>
         <Scripts />
       </body>
     </html>
