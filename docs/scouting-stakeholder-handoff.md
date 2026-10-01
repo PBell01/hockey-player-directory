@@ -2,11 +2,13 @@
 
 ## For scouts and ops
 
-Northline’s scouting data slice now has a small, typed path for players, games, scouting events, and per-game player aggregates. The UI routes use public scouting hooks, event creation uses the public mutation hook, and the data relationships use stable player and game IDs.
+Northline’s Sprint 3 scouting data slice provides a typed path for players, games, scouting events, and per-game player aggregates.
+
+The development environment now contains approved development-only scouting fixture data, and the primary scouting reads, filters, aggregate calculation, event creation, and targeted cache-refresh behavior have been exercised against that data.
 
 The promise behind these decisions is simple: **a schema change should not silently break the board.** Generated database types, typed helpers, and acceptance checks are intended to surface incompatible changes before they quietly reach scout workflows.
 
-The implementation is not ready for full stakeholder handoff yet. The development database has no legitimate player, game, or event rows, so successful live event creation and post-mutation cache refresh have not been observed.
+The implementation is ready for the scoped Sprint 3 development handoff. This is not production authentication, authorization, or RLS sign-off.
 
 ## In-scope entities and relationships
 
@@ -14,11 +16,15 @@ The core scouting entities for this board are:
 
 - **Player:** A skater or goalie Northline tracks.
 - **Game:** A contest on a particular date between sides.
-- **Event:** An observation about a player during a game, such as a goal, assist, hit, or note.
+- **Event:** An observation about a player during a game, such as a goal, shot, hit, blocked shot, save, or note.
 
 Every event belongs to exactly one player and exactly one game. A player and a game can each have many events. Queries must join through stable IDs, not matching names or other free text. This is the foundation for the promise that a schema change should not silently break the board.
 
 The schema uses `public.players`, `public.games`, and `public.scouting_events`. Events reference `players.id` and `games.id` with restrictive deletes so referenced history is not silently removed.
+
+## Development fixture data
+
+The approved development-only fixture is `supabase/dev-scouting-seed.sql`. It provides 6 players, 3 games, and known event records covering goals, shots, hits, blocked shots, and saves. It is safe to rerun because it removes existing fixture rows before reinserting the known dataset. It must not be treated as production scouting data.
 
 ## Typed data-access boundary
 
@@ -64,28 +70,19 @@ For `useCreateScoutingEvent` and `useUpdateScoutingEvent`, the affected families
 
 Player writes target player list/detail keys. Game writes target game list/detail keys. No root `scoutingKeys.all()` invalidation is documented.
 
-The acceptance record distinguishes code targeting from runtime freshness. The intended keys are verified by code inspection, but no successful live event create was possible, so no post-mutation React Query refetch or changed aggregate was observed. A schema change should not silently break the board, and a cache rule should not silently leave it stale; the latter still needs live-data verification.
+The development verification observed a successful event create, the new event appearing without a manual browser reload, and the affected aggregate loading afterward. The key targeting remains intentionally scoped; no root `scoutingKeys.all()` invalidation is used. A schema change should not silently break the board, and a cache rule should not silently leave it stale.
 
 ## Acceptance snapshot
 
-The authoritative record is `docs/scouting-acceptance-verification.md`.
+The authoritative record is `docs/scouting-acceptance-verification.md`. The supplied Sprint 3 development verification reports:
 
-- **Pass:** `JR-01`, `JR-03`, `JR-07`, `RPC-01`, `RPC-02`, `MUT-03`, `MUT-04`, `MUT-06`, `MUT-07`, `MUT-08`, `TYPE-01`, `TYPE-02`, `TYPE-03`, `TYPE-04`.
-- **Waived:** `JR-02`, `JR-04`, `JR-05`, `JR-06`, `JR-08`, `RPC-03`, `RPC-04`, `RPC-05`, `MUT-01`, `MUT-02`, `MUT-05`.
-- **Fail:** none.
+- **Pass:** typed player reads, relationship reads, player/team filters, event filters, joined reads, safe empty states, aggregate route/calculation checks, valid event creation, event-list freshness, targeted invalidation, typed access, and mutation boundary checks.
+- **Waived:** `JR-08`, the deliberately induced provider-read-failure test that was not required for development verification.
+- **Fail:** none observed.
 
-Runtime observations included opening `/scouting/players`, `/scouting/events`, and `/scouting/aggregates`; the player and event routes showed safe empty states, and the aggregate route showed its no-selection and empty states. The event validation error was also observed.
+The fixture-backed verification opened `/scouting/players`, `/scouting/events`, and `/scouting/aggregates`; exercised player/team and event filters; created a valid development event; observed it in the event list without a manual reload; and loaded the affected game aggregate. The development typecheck also passed.
 
-The following were not verified because no live scouting rows or supported seed/fixture mechanism were available:
-
-- relationship comparison against real player, game, and event rows
-- meaningful player/team and event filter checks
-- aggregate count and goal spot-checks
-- successful event creation
-- event appearance after creation without a browser reload
-- aggregate refresh after a successful mutation
-
-The acceptance gate is explicitly: **Ready for stakeholder handoff: No.** This is an environment-data limitation, not an observed code failure.
+**Ready for stakeholder handoff: Yes, for the scoped Sprint 3 development slice.** This does not constitute production authentication, authorization, or RLS hardening sign-off.
 
 ## Out of scope / next sprint
 
@@ -95,7 +92,7 @@ The following are not complete and must not be treated as signed off:
 - deeper Playwright/E2E coverage
 - production RLS policy hardening or polish
 
-The next sprint should provide an approved way to obtain legitimate non-production scouting data, complete the live mutation and cache-refresh checks, and then address auth-aware access before expanding privileged workflows. It should continue to preserve the typed boundary so a schema change should not silently break the board.
+The next sprint may provide auth-aware reads and writes, expand automated browser coverage, and harden production authorization. It should continue to preserve the typed boundary so a schema change should not silently break the board.
 
 ## Schema-evolution checklist
 
@@ -107,7 +104,7 @@ When the schema changes:
 3. Run `npx tsc --noEmit` and fix every affected typed consumer, including `src/lib/scouting/queries.ts`, `src/lib/scouting/mutations.ts`, `src/lib/scouting/rpc.ts`, hooks, and routes.
 4. Update cache rules and `docs/scouting-cache-invalidation-map.md` if the changed data can make additional views stale.
 5. Rerun the mapper, query, hook, and acceptance checks.
-6. Record any remaining live-data waiver rather than inventing records or marking a runtime observation complete.
+6. Record any remaining runtime limitation rather than inventing or misrepresenting verification evidence.
 
 This workflow makes schema drift visible at the type boundary instead of allowing it to silently break the board.
 
@@ -119,11 +116,10 @@ This workflow makes schema drift visible at the type boundary instead of allowin
 - `docs/scouting-cache-invalidation-map.md` — mutation-to-query invalidation targets.
 - `docs/scouting-acceptance-verification.md` — populated acceptance results, evidence, and waivers.
 - `docs/scouting-stakeholder-handoff.md` — this stakeholder-facing summary.
+- `supabase/dev-scouting-seed.sql` — development-only scouting fixture data.
 
 ## Next-sprint boundaries
 
-Next work may add approved test data access, complete runtime acceptance verification, and design auth-aware reads and writes. It should not bypass `src/lib/scouting/*`, add direct route-level Supabase calls, or treat the current empty-database waiver as a successful live-data result.
+Sprint 3 is focused on a typed, correctly joined scouting data slice that can evolve without silently breaking the board. Future work should preserve the existing typed data-access boundary while adding only explicitly approved scouting capabilities.
 
-Do not expand this handoff into public fan applications, payments, live video, fantasy features, or unrelated product workflows. Keep the work focused on a typed, correctly joined scouting board that can evolve without silently breaking.
-
-
+Do not expand this work into public fan applications, payments, live video, fantasy features, or unrelated product workflows.

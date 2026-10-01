@@ -44,7 +44,9 @@ export async function listPlayers(
   return data
 }
 
-export async function getPlayerById(id: PlayerRow['id']): Promise<PlayerRow | null> {
+export async function getPlayerById(
+  id: PlayerRow['id'],
+): Promise<PlayerRow | null> {
   const { data, error } = await supabase
     .from('players')
     .select('*')
@@ -80,7 +82,9 @@ export async function listGames(
   return data
 }
 
-export async function getGameById(id: GameRow['id']): Promise<GameRow | null> {
+export async function getGameById(
+  id: GameRow['id'],
+): Promise<GameRow | null> {
   const { data, error } = await supabase
     .from('games')
     .select('*')
@@ -120,18 +124,23 @@ export async function listEvents(
   return data
 }
 
-const eventsWithPlayerQuery = supabase
-  .from('scouting_events')
-  .select(
-    '*, players ( id, name, position, team_org_label )',
-  )
+type EventWithPlayerRow = QueryData<
+  ReturnType<typeof createEventsWithPlayerQuery>
+>[number]
 
-type EventWithPlayerRow = QueryData<typeof eventsWithPlayerQuery>[number]
+function createEventsWithPlayerQuery() {
+  return supabase
+    .from('scouting_events')
+    .select('*, players ( id, name, position, team_org_label )')
+}
 
 export async function listEventsWithPlayer(
   filters: EventListFilters = {},
 ): Promise<EventWithPlayerRow[]> {
-  let query = eventsWithPlayerQuery
+  // Create a fresh Supabase query builder for every request.
+  // Do not reuse a module-level builder because filters can persist
+  // between requests.
+  let query = createEventsWithPlayerQuery()
 
   if (filters.playerId !== undefined) {
     query = query.eq('player_id', filters.playerId)
