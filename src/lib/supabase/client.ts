@@ -1,15 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../../types/database'
 
-const url = import.meta.env.VITE_SUPABASE_URL
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+function requirePublicEnv(name: string, value: string | undefined): string {
+  if (!value) {
+    throw new Error(`Missing ${name}`)
+  }
 
-if (!url) {
-  throw new Error('Missing VITE_SUPABASE_URL')
+  return value
 }
 
-if (!anonKey) {
-  throw new Error('Missing VITE_SUPABASE_ANON_KEY')
+export function createSupabaseBrowserClient() {
+  const url = requirePublicEnv(
+    'VITE_SUPABASE_URL',
+    import.meta.env.VITE_SUPABASE_URL,
+  )
+  const anonKey = requirePublicEnv(
+    'VITE_SUPABASE_ANON_KEY',
+    import.meta.env.VITE_SUPABASE_ANON_KEY,
+  )
+
+  return createClient<Database>(url, anonKey)
 }
 
-export const supabase = createClient<Database>(url, anonKey)
+export const supabase = createSupabaseBrowserClient()
