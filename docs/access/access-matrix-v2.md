@@ -56,6 +56,8 @@ This file is the contract for a later database change. It is not that change. It
 | Scouting | Sports-science data | Deny | Unchanged from the earlier matrix. No new sports-science allow. |
 | Scouting | Medical flags in shared scouting views | Deny | Shared scouting views must hide medical flags from scouts, same as the earlier matrix intended; stated explicitly here so it cannot be read as a new job duty. |
 | Scouting | Service-role key | Never | Staff screens use the signed-in person. |
+| Medical | Scouting notes | Deny | Unchanged from the earlier matrix. Medical must not see scouting notes outside medical care work. |
+| Medical | Game data | Deny | Unchanged from the earlier matrix. Medical care work does not require non-medical game or scouting preparation data. |
 | Medical | Medical records | See, Add, Change | Unchanged from the earlier matrix. Medical tracks sports-science/medical data for player care, within their authorized care scope. |
 | Medical | Sports-science data | See, Add, Change | Unchanged from the earlier matrix. Same reasoning as medical records. |
 | Medical | Medical flags in shared scouting views | Deny | Unchanged from the earlier matrix. Medical staff access medical records directly; they do not need a flag surfaced on a scouting-specific shared view, which is scouting/game content outside their primary workflow. |
