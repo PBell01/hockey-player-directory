@@ -22,6 +22,9 @@
 -- 1) Allow the two new roles on staff_profiles.
 --    TODO: confirm this matches the exact constraint name/shape created in
 --    20250321000000_hockey_staff_rls.sql before applying.
+-- Remove leftover development policies that allowed open access and would
+-- override the role-based policies below (permissive policies combine with OR).
+
 alter table public.staff_profiles
   drop constraint if exists staff_profiles_role_check;
 
@@ -32,6 +35,10 @@ alter table public.staff_profiles
 -- 2) Ensure RLS is enabled on the real sensitive tables.
 alter table public.games enable row level security;
 alter table public.scouting_events enable row level security;
+
+drop policy if exists "dev scouting games read" on public.games;
+drop policy if exists "dev scouting events read" on public.scouting_events;
+drop policy if exists "dev allow scouting event inserts" on public.scouting_events;
 
 -- =====================================================================
 -- scouting_events

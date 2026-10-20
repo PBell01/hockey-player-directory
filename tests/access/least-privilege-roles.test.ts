@@ -63,6 +63,14 @@ function expectAllowed(res: Result) {
   expect(res.error, res.error?.message).toBeNull()
 }
 
+function expectAllowedWithRows(res: Result, target: string) {
+  expect(res.error, res.error?.message).toBeNull()
+  expect(
+    Array.isArray(res.data) ? res.data.length : 0,
+    `${target} returned no rows to a role that must be allowed`,
+  ).toBeGreaterThan(0)
+}
+
 function expectDenied(res: Result, target: string) {
   if (res.error && TABLE_MISSING_CODES.includes(res.error.code ?? '')) {
     // A missing table is not a refusal. Fail instead of passing vacuously.
@@ -96,22 +104,22 @@ describe.skipIf(!configured)('least-privilege roles (access matrix v2)', () => {
   // ---- Allowed reads: the new jobs still work ----
   it('AS-READ-SCOUT: assistant scout reads scouting_events', async () => {
     const c = await signedInClient(accounts.assistantScout)
-    expectAllowed(await c.from('scouting_events').select('*'))
+    expectAllowedWithRows(await c.from('scouting_events').select('*'), 'scouting_events')
   })
 
   it('AS-READ-GAME: assistant scout reads games', async () => {
     const c = await signedInClient(accounts.assistantScout)
-    expectAllowed(await c.from('games').select('*'))
+    expectAllowedWithRows(await c.from('games').select('*'), 'games')
   })
 
   it('VA-READ-SCOUT: video analyst reads scouting_events', async () => {
     const c = await signedInClient(accounts.videoAnalyst)
-    expectAllowed(await c.from('scouting_events').select('*'))
+    expectAllowedWithRows(await c.from('scouting_events').select('*'), 'scouting_events')
   })
 
   it('VA-READ-GAME: video analyst reads games', async () => {
     const c = await signedInClient(accounts.videoAnalyst)
-    expectAllowed(await c.from('games').select('*'))
+    expectAllowedWithRows(await c.from('games').select('*'), 'games')
   })
 
   // ---- Assistant scout: sealed data ----
@@ -196,7 +204,7 @@ describe.skipIf(!configured)('least-privilege roles (access matrix v2)', () => {
   // ---- Control case ----
   it('MED-READ-MED: medical role CAN read medical_records (control)', async () => {
     const c = await signedInClient(accounts.medical)
-    expectAllowed(await c.from('medical_records').select('*'))
+    expectAllowedWithRows(await c.from('medical_records').select('*'), 'medical_records')
   })
 
   // ---- My added case ----
