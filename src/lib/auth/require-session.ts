@@ -6,6 +6,10 @@ export type SessionUser = {
   email: string | undefined
 }
 
+export function getAuthedServerClient() {
+  return createSupabaseServerClient(getServerCookies())
+}
+
 function getServerCookies() {
   return {
     getAll: () => {
