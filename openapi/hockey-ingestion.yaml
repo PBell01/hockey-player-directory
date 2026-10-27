@@ -52,6 +52,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+           
+                  
+  /evaluations:
+    post:
+      summary: Submit one coach player evaluation
+      operationId: createEvaluation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluationCreate"
+      responses:
+        "201":
+          description: Evaluation accepted and created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evaluation"
+        "400":
+          description: Request is unusable (empty body, not JSON, wrong Content-Type).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: No valid identity was provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Identity is valid, but this caller may not submit evaluations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: JSON parsed, but one or more fields failed validation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -98,6 +141,45 @@ components:
           description: Workflow state of the stored event.
         event:
           $ref: "#/components/schemas/HockeyEvent"
+    EvaluationCreate:
+      type: object
+      required:
+        - playerId
+        - practiceDate
+        - ratings
+      properties:
+        playerId:
+          type: string
+          description: Which player is being evaluated.
+        practiceDate:
+          type: string
+          format: date
+          description: Date of the practice being evaluated.
+        ratings:
+          type: object
+          description: Skill ratings, for example skating.
+          additionalProperties:
+            type: integer
+            minimum: 1
+            maximum: 5
+        comments:
+          type: string
+          description: Written comments from the coach.
+    Evaluation:
+      allOf:
+        - $ref: "#/components/schemas/EvaluationCreate"
+        - type: object
+          required:
+            - id
+            - state
+          properties:
+            id:
+              type: string
+              description: Server-assigned identifier.
+            state:
+              type: string
+              enum: [submitted]
+              description: Workflow state of the stored evaluation.
     ErrorResponse:
       type: object
       required:
