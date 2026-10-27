@@ -1,0 +1,144 @@
+openapi: "3.0.3"
+info:
+  title: Hockey Event Ingestion API
+  version: "1.0.0"
+  description: Provider-facing contract for pushing hockey game events.
+
+paths:
+  /events:
+    post:
+      summary: Ingest one hockey game event from the data provider
+      operationId: createHockeyEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HockeyEvent"
+      responses:
+        "201":
+          description: Event accepted and created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HockeyEventResponse"
+        "400":
+          description: Request is unusable (empty body, not JSON, wrong Content-Type).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: No valid identity was provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Identity is valid, but this caller may not post events.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: An event with this provider event id is already stored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: JSON parsed, but one or more fields failed validation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HockeyEvent:
+      type: object
+      required:
+        - providerEventId
+        - gameId
+        - eventType
+        - period
+        - clockTime
+      properties:
+        providerEventId:
+          type: string
+          description: The provider's own id for this event. Used to detect duplicates.
+        gameId:
+          type: string
+          description: Which game the event belongs to.
+        eventType:
+          type: string
+          description: What happened, for example goal or penalty.
+        period:
+          type: string
+          description: Period of the game, for example 1, 2, 3, or OT.
+        clockTime:
+          type: string
+          description: Game clock time when the event happened, for example "12:34".
+        playerId:
+          type: string
+          description: Which player the event involves, if any.
+    HockeyEventResponse:
+      type: object
+      required:
+        - id
+        - state
+        - event
+      properties:
+        id:
+          type: string
+          description: Id assigned to the stored event.
+        state:
+          type: string
+          enum: [accepted]
+          description: Workflow state of the stored event.
+        event:
+          $ref: "#/components/schemas/HockeyEvent"
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - details
+          properties:
+            code:
+              type: string
+              enum:
+                - MALFORMED_REQUEST
+                - UNAUTHENTICATED
+                - FORBIDDEN
+                - NOT_FOUND
+                - CONFLICT
+                - VALIDATION_FAILED
+              description: Stable machine-readable error token.
+            message:
+              type: string
+              description: Short human summary of the whole failure.
+            details:
+              type: array
+              description: Field-level problems. Empty when no field applies.
+              items:
+                type: object
+                required:
+                  - field
+                  - code
+                  - message
+                properties:
+                  field:
+                    type: string
+                    description: Dot path into the request body, or empty if not field-specific.
+                  code:
+                    type: string
+                    description: Machine-readable code such as REQUIRED, OUT_OF_RANGE, or DUPLICATE.
+                  message:
+                    type: string
+                    description: What the provider should change.
