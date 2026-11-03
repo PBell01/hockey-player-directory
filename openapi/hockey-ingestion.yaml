@@ -148,6 +148,9 @@ components:
         replayed:
           type: boolean
           description: Optional hint. True when this response repeats an earlier acceptance of the same providerEventId.
+        corrected:
+          type: boolean
+          description: Optional hint. True when this response applies corrected facts to an earlier acceptance of the same providerEventId.
     EvaluationCreate:
       type: object
       required:
