@@ -40,4 +40,4 @@ Wording-only side effect: the description of the existing 409 response was narro
 - If any answer was wrong, what you told the agent to fix: nothing to fix
 
 ## Follow-up for a later step
-docs/api/error-and-status-model.md still describes a duplicate provider event id as a 409. That wording now disagrees with this promise and should be updated when the error model is next revised. The handlers do not store anything yet, so replay is a promise in the contract, not running behavior.
+The events route now stores events and returns the original success on a replay. The optional replayed hint is not returned, and the contract marks it optional. A late correction currently gets the same reply as a first accept, so a "correction applied" wording is still to be added. docs/api/error-and-status-model.md still describes a duplicate provider event id as a 409, and a 500 response is used for failed writes but is not in the error model.

@@ -42,7 +42,7 @@ The contract uses these status numbers:
 ### What we deliberately deferred
 
 - **Identity:** we do not yet check who is sending. Anyone who knows the address can send something.
-- **Persistence:** accepted events and evaluations are not saved. The app answers "accepted" with a stand-in result and then forgets it.
+- **Persistence:** accepted game events are now saved, once per provider event id. Accepted evaluations are still not saved.
 - **Screens:** we did not build the coach evaluation form.
 - **Open items:** the open questions in section 6. They are questions, not hidden features.
 
@@ -55,7 +55,7 @@ The coach-facing form (not built yet) and any instructions for the data company.
 Only the server accepts or refuses a submission. It reads the message, checks every field, and answers with either "created" or the structured list of problems. It does this for both jobs, in the same way.
 
 ### Database
-Storage is not part of this sprint. The two submission addresses do not save anything yet. The app's database from earlier work is untouched by them. Saving events and evaluations is the second job for the next topic.
+Game events are saved in a separate table, once per provider event id. Evaluations are not saved yet. Batch delivery and sender identity are not built.
 
 ### Manual process
 Coaching judgment stays human. A coach decides what to write, whether an evaluation is ready to share with a player, and what it means for the player's development. The app only receives and records what a person decides.
