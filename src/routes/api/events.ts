@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { getSupabaseServerClient } from '../../../app/lib/supabase.server'
 import { validateEventPayload } from '../../server/validation/event-payload'
 
 // Error envelope from openapi/hockey-ingestion.yaml (ErrorResponse).
@@ -45,9 +46,82 @@ export const Route = createFileRoute('/api/events')({
           )
         }
 
-        // Stub success: no database, no auth in this step.
+        const client = getSupabaseServerClient()
+        const { data: existing, error: lookupError } = await client
+          .from('provider_events')
+          .select('id, provider_event_id, event')
+          .eq('provider_event_id', result.data.providerEventId)
+          .maybeSingle()
+
+        if (lookupError) {
+          return errorResponse(
+            500,
+            'INTERNAL',
+            'The event could not be saved.',
+          )
+        }
+
+        if (existing) {
+          const isExactReplay =
+            JSON.stringify(existing.event) === JSON.stringify(result.data)
+
+          if (isExactReplay) {
+            return Response.json(
+              {
+                id: existing.id,
+                state: 'accepted',
+                event: existing.event,
+                replayed: true,
+              },
+              { status: 201 },
+            )
+          }
+
+          const { data: corrected, error: correctionError } = await client
+            .from('provider_events')
+            .update({ event: result.data, updated_at: new Date().toISOString() })
+            .eq('id', existing.id)
+            .select('id, event')
+            .single()
+
+          if (correctionError) {
+            return errorResponse(
+              500,
+              'INTERNAL',
+              'The event could not be saved.',
+            )
+          }
+
+          return Response.json(
+            {
+              id: corrected.id,
+              state: 'accepted',
+              event: corrected.event,
+              corrected: true,
+            },
+            { status: 201 },
+          )
+        }
+
+        const { data: stored, error: insertError } = await client
+          .from('provider_events')
+          .insert({
+            provider_event_id: result.data.providerEventId,
+            event: result.data,
+          })
+          .select('id, event')
+          .single()
+
+        if (insertError) {
+          return errorResponse(
+            500,
+            'INTERNAL',
+            'The event could not be saved.',
+          )
+        }
+
         return Response.json(
-          { id: crypto.randomUUID(), state: 'accepted', event: result.data },
+          { id: stored.id, state: 'accepted', event: stored.event },
           { status: 201 },
         )
       },
