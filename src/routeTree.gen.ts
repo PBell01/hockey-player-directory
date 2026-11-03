@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DirectoryRouteImport } from './routes/directory'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ApiEvaluationsRouteImport } from './routes/api/evaluations'
+import { Route as ApiEventsRouteImport } from './routes/api/events'
 import { Route as GamesIndexRouteImport } from './routes/games/index'
 import { Route as PlayersIndexRouteImport } from './routes/players/index'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players/$playerId'
@@ -33,6 +35,16 @@ const DirectoryRoute = DirectoryRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiEvaluationsRoute = ApiEvaluationsRouteImport.update({
+  id: '/api/evaluations',
+  path: '/api/evaluations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiEventsRoute = ApiEventsRouteImport.update({
+  id: '/api/events',
+  path: '/api/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamesIndexRoute = GamesIndexRouteImport.update({
@@ -75,6 +87,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/directory': typeof DirectoryRoute
   '/login': typeof LoginRoute
+  '/api/evaluations': typeof ApiEvaluationsRoute
+  '/api/events': typeof ApiEventsRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/scouting/aggregates': typeof ScoutingAggregatesRoute
   '/scouting/events': typeof ScoutingEventsRoute
@@ -87,6 +101,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/directory': typeof DirectoryRoute
   '/login': typeof LoginRoute
+  '/api/evaluations': typeof ApiEvaluationsRoute
+  '/api/events': typeof ApiEventsRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/scouting/aggregates': typeof ScoutingAggregatesRoute
   '/scouting/events': typeof ScoutingEventsRoute
@@ -100,6 +116,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/directory': typeof DirectoryRoute
   '/login': typeof LoginRoute
+  '/api/evaluations': typeof ApiEvaluationsRoute
+  '/api/events': typeof ApiEventsRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/scouting/aggregates': typeof ScoutingAggregatesRoute
   '/scouting/events': typeof ScoutingEventsRoute
@@ -114,6 +132,8 @@ export interface FileRouteTypes {
     | '/'
     | '/directory'
     | '/login'
+    | '/api/evaluations'
+    | '/api/events'
     | '/players/$playerId'
     | '/scouting/aggregates'
     | '/scouting/events'
@@ -126,6 +146,8 @@ export interface FileRouteTypes {
     | '/'
     | '/directory'
     | '/login'
+    | '/api/evaluations'
+    | '/api/events'
     | '/players/$playerId'
     | '/scouting/aggregates'
     | '/scouting/events'
@@ -138,6 +160,8 @@ export interface FileRouteTypes {
     | '/'
     | '/directory'
     | '/login'
+    | '/api/evaluations'
+    | '/api/events'
     | '/players/$playerId'
     | '/scouting/aggregates'
     | '/scouting/events'
@@ -151,6 +175,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DirectoryRoute: typeof DirectoryRoute
   LoginRoute: typeof LoginRoute
+  ApiEvaluationsRoute: typeof ApiEvaluationsRoute
+  ApiEventsRoute: typeof ApiEventsRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
   ScoutingAggregatesRoute: typeof ScoutingAggregatesRoute
   ScoutingEventsRoute: typeof ScoutingEventsRoute
@@ -181,6 +207,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/evaluations': {
+      id: '/api/evaluations'
+      path: '/api/evaluations'
+      fullPath: '/api/evaluations'
+      preLoaderRoute: typeof ApiEvaluationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/events': {
+      id: '/api/events'
+      path: '/api/events'
+      fullPath: '/api/events'
+      preLoaderRoute: typeof ApiEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/games/': {
@@ -239,6 +279,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DirectoryRoute: DirectoryRoute,
   LoginRoute: LoginRoute,
+  ApiEvaluationsRoute: ApiEvaluationsRoute,
+  ApiEventsRoute: ApiEventsRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
   ScoutingAggregatesRoute: ScoutingAggregatesRoute,
   ScoutingEventsRoute: ScoutingEventsRoute,
