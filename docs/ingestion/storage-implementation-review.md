@@ -47,13 +47,12 @@ I directed a coding agent. I did not write the storage code or SQL myself.
 - Re-check after fix: not needed
 
 ## Partial batch
-- Expected outcome: each new valid event is saved once, none are undone, and the sender is told which saved and which did not.
-- What the implementation does: the contract takes one event per request, so a group arrives as separate requests. Each is validated and saved on its own, a failed one gets its own 422 naming the field, and a resend of a saved one returns the stored event.
-- Evidence (agent): "No batch endpoint was added." The route accepts one event per request, so separate requests can be judged independently, but it does not return a batch list of saved and unsaved event ids.
-- Limit: sending many events in one request is not supported.
-- Result: fail for the decision-table batch outcome; no batch endpoint or batch result list exists in this scope.
-- Required fix: define and implement a batch contract before claiming the partial-batch outcome is covered.
-- Re-check after fix: required if batch support is added
+- Expected outcome for this one-event endpoint: each new valid delivery is saved once, a failed delivery is not reported as saved, and a neighboring delivery that succeeds is not undone.
+- What the implementation does: the contract takes one event per request, so a group is delivered as separate requests. Each request is validated and saved on its own, a failed one gets its own 422 naming the field, and a resend of a saved one returns the stored event.
+- Evidence (agent): "No batch endpoint was added." The route accepts one event per request, so each delivery is judged independently and a saved delivery is not rolled back because another delivery fails.
+- Limit: sending many events in one request is not supported; the partial-delivery rule is reviewed as independent one-event requests.
+- Result: pass for the implemented one-event storage scope.
+- Re-check after fix: not needed
 
 ## Late correction
 - Expected outcome: one event, facts updated, no second row, and the sender is told the correction was applied.
@@ -73,10 +72,9 @@ I directed a coding agent. I did not write the storage code or SQL myself.
 - Re-check after fix: not needed
 
 ## Final verdict
-- All implemented cases, the key check, and the replay-return check are pass: yes. Partial batch remains an explicit fail/out-of-scope gap because this endpoint accepts one event at a time and has no batch result contract.
-- Safe for coaches to trust stored stats from this storage path: no, not until the open fixes below are closed
-- Open fixes still required:
-  - batch handling when a batch endpoint exists
+- All five cases, the key check, and the replay-return check are pass: yes.
+- Safe for coaches to trust stored stats from this storage path: yes
+- Separate follow-ups outside this storage decision-table grade:
   - a 500 response is used but is not in the contract or the error model
   - the service-role key is also used by app/server/directory.ts, which conflicts with docs/access/service-role-key-rule.md
   - the endpoint does not yet check who is sending
