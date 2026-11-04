@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getSupabaseServerClient } from '../../../app/lib/supabase.server'
-import { validateEventPayload } from '../../server/validation/event-payload'
+import {
+  validateEventPayload,
+  type EventPayload,
+} from '../../server/validation/event-payload'
 
 // Error envelope from openapi/hockey-ingestion.yaml (ErrorResponse).
 function errorResponse(
@@ -10,6 +13,26 @@ function errorResponse(
   details: { field: string; code: string; message: string }[] = [],
 ) {
   return Response.json({ error: { code, message, details } }, { status })
+}
+
+function hasSameEventFacts(
+  storedEvent: unknown,
+  incomingEvent: EventPayload,
+): boolean {
+  if (storedEvent === null || typeof storedEvent !== 'object') {
+    return false
+  }
+
+  const stored = storedEvent as Partial<EventPayload>
+
+  return (
+    stored.providerEventId === incomingEvent.providerEventId &&
+    stored.gameId === incomingEvent.gameId &&
+    stored.eventType === incomingEvent.eventType &&
+    stored.period === incomingEvent.period &&
+    stored.clockTime === incomingEvent.clockTime &&
+    (stored.playerId ?? undefined) === (incomingEvent.playerId ?? undefined)
+  )
 }
 
 export const Route = createFileRoute('/api/events')({
@@ -62,8 +85,7 @@ export const Route = createFileRoute('/api/events')({
         }
 
         if (existing) {
-          const isExactReplay =
-            JSON.stringify(existing.event) === JSON.stringify(result.data)
+          const isExactReplay = hasSameEventFacts(existing.event, result.data)
 
           if (isExactReplay) {
             return Response.json(
