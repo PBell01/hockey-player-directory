@@ -16,12 +16,12 @@ export const contentSecurityPolicyDirectives = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   // Scripts: this site only. No *, no 'unsafe-inline', no 'unsafe-eval'.
-  "script-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
   // Styles may be inline because the Tailwind/React app needs it.
   // Do NOT copy 'unsafe-inline' onto script-src.
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob:",
-  "font-src 'self' data:",
+  "font-src 'self' data: https://fonts.gstatic.com",
   // The browser talks to Supabase over https and a secure websocket.
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
   "upgrade-insecure-requests",

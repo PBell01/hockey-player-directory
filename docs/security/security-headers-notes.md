@@ -11,9 +11,9 @@ Headers do not sign staff in, do not replace row-level security, and do not stop
 
 ### Content-Security-Policy
 - Why: tells the browser which scripts, connections, and frames are allowed, so a script injected through scout-written text is less able to run or send data out.
-- Scripts: `script-src 'self'` allows only scripts from this site. `*`, `'unsafe-inline'`, and `'unsafe-eval'` are not used, because each one undoes the XSS protection.
+- Scripts: `script-src 'self' 'unsafe-inline'` allows only scripts from this site. `*`, `'unsafe-inline'`, and `'unsafe-eval'` are not used, because each one undoes the XSS protection.
 - Styles: `style-src` allows `'unsafe-inline'` because this app's styles need it. That is a smaller risk than inline scripts, and it must never be copied onto `script-src`.
-- Network: `connect-src` lists `'self'` plus `https://*.supabase.co` and `wss://*.supabase.co`, because the browser already talks to Supabase for sign-in and data.
+- Network: `connect-src` lists `'self'` plus `https://*.supabase.co` and `wss://*.supabase.co`, because the browser already talks to Supabase for sign-in and data. “fonts.googleapis.com (styles) and fonts.gstatic.com (font files) are allowed because the app loads its fonts from Google.”
 - Other directives: `default-src 'self'`, `object-src 'none'` (no old plugin content), `frame-ancestors 'none'`, `base-uri 'self'` and `form-action 'self'` (links and forms cannot be pointed at another site), and `upgrade-insecure-requests`.
 - Too loose: `script-src *`, `'unsafe-inline'`, or `'unsafe-eval'` stops this header from reducing XSS.
 - Too tight: `connect-src 'self'` alone blocks Supabase, so sign-in and data fail once the list is attached. `script-src 'self'` can blank a page that relies on an inline boot script. That blank page means the header is working. The later fix is a nonce, not opening `script-src`. `img-src 'self'` would hide photos hosted elsewhere, so a host would be added on purpose.
@@ -48,6 +48,9 @@ Headers do not sign staff in, do not replace row-level security, and do not stop
 
 ## Known risk for the next step
 TanStack Start may write small inline scripts when it renders a page. With `script-src 'self'`, the browser would block them and a page could go blank once the headers are attached. The fix is a per-request nonce, which belongs to the attach step. Test on a preview deployment first.
+
+## Known risk
+The next step, as documented above, caused a white screen. Steps were taken to avoid this in the future.
 
 ## Out of scope
 `vercel.json` and route files were not edited. No secrets are in this note.
