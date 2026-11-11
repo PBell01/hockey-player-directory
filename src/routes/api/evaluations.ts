@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { validateEvaluationPayload } from '../../server/validation/evaluation-payload'
+import { csrfBlockResponse } from '../../server/csrf'
 
 // Error envelope from openapi/hockey-ingestion.yaml (ErrorResponse).
 function errorResponse(
@@ -15,6 +16,9 @@ export const Route = createFileRoute('/api/evaluations')({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
+        const blocked = csrfBlockResponse(request)
+        if (blocked) return blocked
+
         const contentType = request.headers.get('content-type') ?? ''
         if (!contentType.toLowerCase().includes('application/json')) {
           return errorResponse(
