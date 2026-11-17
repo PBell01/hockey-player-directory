@@ -65,7 +65,7 @@ export async function authorizeResource(input: {
   kind: ResourceKind
   id: unknown
   action?: ResourceAction
-}): Promise<{ staffId: string; resourceId: string }> {
+}): Promise<{ staffId: string; resourceId: string; role: string }> {
   // 1. Reject an unsafe id before anything touches the database.
   const resourceId = assertSafeIdentifier(input.id)
 
@@ -93,7 +93,7 @@ export async function authorizeResource(input: {
     throw new ResourceNotFoundError()
   }
 
-  if (action === 'create') return { staffId: user.id, resourceId }
+  if (action === 'create') return { staffId: user.id, resourceId, role: profile.role }
 
   // 5. Object-level check: read the one row with the user-scoped client.
   //    If row-level security hides it, there is no row, so deny.
@@ -105,7 +105,7 @@ export async function authorizeResource(input: {
 
   if (lookup.error || !lookup.data) throw new ResourceNotFoundError()
 
-  return { staffId: user.id, resourceId }
+    return { staffId: user.id, resourceId, role: profile.role }
 }
 
 // Collection-level gate: may this signed-in role read this KIND of record at all?
