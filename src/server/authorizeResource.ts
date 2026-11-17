@@ -88,3 +88,22 @@ export async function authorizeResource(input: {
 
   return { staffId: user.id, resourceId }
 }
+
+// Collection-level gate: may this signed-in role read this KIND of record at all?
+// Used where there is no single id (a list). Row-level security still filters rows.
+export async function authorizeKind(kind: ResourceKind): Promise<{ staffId: string }> {
+  const user = await requireSession()
+  const supabase = getAuthedServerClient()
+
+  const { data: profile, error } = await supabase
+    .from('staff_profiles')
+    .select('role')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (error || !profile) throw new ResourceNotFoundError()
+
+  if (decideResourceAccess(profile.role, kind) !== 'allow') {
+    throw new ResourceNotFoundError()
+  }
+  return { staffId: user.id }
+}
