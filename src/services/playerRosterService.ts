@@ -1,13 +1,16 @@
-// Business rule: what may this signed-in staff member learn about one player?
+// Business rule: what may this staff member learn about one player?
 // Plain inputs, plain answers. No Request, no cookies, no HTTP status numbers.
-// A later file turns these answers into a web reply.
+// The actor is ordinary data, built by the trusted boundary from the session.
 
 import { findPlayerById } from '../data/playerAccess'
 import {
   authorizeResource,
   decideResourceAccess,
   ResourceNotFoundError,
+  type StaffActor,
 } from '../server/authorizeResource'
+
+export type { StaffActor }
 
 // Safe fields are always present. Confidential fields appear only when allowed.
 export type PlayerRosterView = {
@@ -24,6 +27,7 @@ export type RosterReadResult =
   | { outcome: 'allowed'; view: PlayerRosterView }
 
 export async function readPlayerRosterForStaff(
+  actor: StaffActor,
   playerId: string,
 ): Promise<RosterReadResult> {
   // 1. A blank id is not a player. Stop before any lookup.
@@ -31,15 +35,11 @@ export async function readPlayerRosterForStaff(
     return { outcome: 'missing_id' }
   }
 
-  // 2. May this staff member open this player at all? Who is asking comes
-  //    from the server session inside authorizeResource, not from the caller.
-  let role: string
+  // 2. May this actor open this kind of record? Denied and malformed ids both
+  //    end here, so the app never confirms another player's id is real.
   try {
-    const access = await authorizeResource({ kind: 'player', id: playerId })
-    role = access.role
+    await authorizeResource({ kind: 'player', id: playerId, actor })
   } catch (error) {
-    // Denied, missing, and malformed ids all end here. The caller must treat
-    // them the same, so the app never confirms another player's id is real.
     if (error instanceof ResourceNotFoundError) return { outcome: 'not_allowed' }
     throw error
   }
@@ -48,8 +48,9 @@ export async function readPlayerRosterForStaff(
   const record = await findPlayerById(playerId)
   if (!record) return { outcome: 'not_found' }
 
-  // 4. May this role learn confidential scouting facts? Same matrix as scouting notes.
-  const mayLearnConfidential = decideResourceAccess(role, 'scouting_note') === 'allow'
+  // 4. May this role learn confidential scouting facts?
+  const mayLearnConfidential =
+    decideResourceAccess(actor.role, 'scouting_note') === 'allow'
 
   // 5. Build the view by naming fields. Never spread or return the raw row.
   const view: PlayerRosterView = {
