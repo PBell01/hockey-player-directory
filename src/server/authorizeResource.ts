@@ -8,6 +8,7 @@
 import { getAuthedServerClient, requireSession } from '../lib/auth/require-session'
 
 export type ResourceKind = 'player' | 'scouting_note'
+export type ResourceAction = 'read' | 'create' | 'update' | 'delete'
 
 export type StaffRole =
   | 'coaching'
@@ -47,6 +48,14 @@ const MAY_READ: Record<StaffRole, readonly ResourceKind[]> = {
   video_analyst: ['scouting_note'],
 }
 
+const MAY_WRITE: Record<StaffRole, readonly ResourceAction[]> = {
+  coaching: [],
+  scouting: ['create', 'update'],
+  medical: [],
+  assistant_scout: ['create'],
+  video_analyst: [],
+}
+
 export function decideResourceAccess(role: unknown, kind: ResourceKind): 'allow' | 'deny' {
   if (typeof role !== 'string' || !Object.hasOwn(MAY_READ, role)) return 'deny'
   return MAY_READ[role as StaffRole].includes(kind) ? 'allow' : 'deny'
@@ -55,6 +64,7 @@ export function decideResourceAccess(role: unknown, kind: ResourceKind): 'allow'
 export async function authorizeResource(input: {
   kind: ResourceKind
   id: unknown
+  action?: ResourceAction
 }): Promise<{ staffId: string; resourceId: string }> {
   // 1. Reject an unsafe id before anything touches the database.
   const resourceId = assertSafeIdentifier(input.id)
@@ -72,9 +82,18 @@ export async function authorizeResource(input: {
   if (profileError || !profile) throw new ResourceNotFoundError()
 
   // 4. May this role read this kind of record at all?
-  if (decideResourceAccess(profile.role, input.kind) !== 'allow') {
+  const action = input.action ?? 'read'
+  const allowed =
+    action === 'read'
+      ? decideResourceAccess(profile.role, input.kind) === 'allow'
+      : typeof profile.role === 'string' &&
+        MAY_WRITE[profile.role as StaffRole]?.includes(action) === true
+
+  if (!allowed) {
     throw new ResourceNotFoundError()
   }
+
+  if (action === 'create') return { staffId: user.id, resourceId }
 
   // 5. Object-level check: read the one row with the user-scoped client.
   //    If row-level security hides it, there is no row, so deny.
