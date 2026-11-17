@@ -7,6 +7,26 @@
 
 import { getAuthedServerClient, requireSession } from '../lib/auth/require-session'
 
+// Plain identity of the person asking. Build it ONLY on the server, from the
+// session, with getStaffActor(). Never from request input.
+export type StaffActor = {
+  staffId: string
+  role: string
+}
+
+// Trusted boundary helper: resolves who is asking from the server session.
+export async function getStaffActor(): Promise<StaffActor> {
+  const user = await requireSession()
+  const supabase = getAuthedServerClient()
+  const { data: profile, error } = await supabase
+    .from('staff_profiles')
+    .select('role')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (error || !profile) throw new ResourceNotFoundError()
+  return { staffId: user.id, role: profile.role }
+}
+
 export type ResourceKind = 'player' | 'scouting_note'
 export type ResourceAction = 'read' | 'create' | 'update' | 'delete'
 
@@ -65,47 +85,36 @@ export async function authorizeResource(input: {
   kind: ResourceKind
   id: unknown
   action?: ResourceAction
+  actor?: StaffActor
 }): Promise<{ staffId: string; resourceId: string; role: string }> {
   // 1. Reject an unsafe id before anything touches the database.
   const resourceId = assertSafeIdentifier(input.id)
 
-  // 2. Who is asking? Re-read the session on the server.
-  const user = await requireSession()
-  const supabase = getAuthedServerClient()
+  // 2. Who is asking? Use the plain actor if given, otherwise the session.
+  const actor = input.actor ?? (await getStaffActor())
 
-  // 3. Their role, from their own profile row (row-level security allows this).
-  const { data: profile, error: profileError } = await supabase
-    .from('staff_profiles')
-    .select('role')
-    .eq('user_id', user.id)
-    .maybeSingle()
-  if (profileError || !profile) throw new ResourceNotFoundError()
-
-  // 4. May this role read this kind of record at all?
-  const action = input.action ?? 'read'
+  // 3. May this role do this action on this kind of record?
+  //    No action means a read. Any action uses the write map.
   const allowed =
-    action === 'read'
-      ? decideResourceAccess(profile.role, input.kind) === 'allow'
-      : typeof profile.role === 'string' &&
-        MAY_WRITE[profile.role as StaffRole]?.includes(action) === true
+    input.action === undefined
+      ? decideResourceAccess(actor.role, input.kind) === 'allow'
+      : input.kind === 'scouting_note' &&
+        Object.hasOwn(MAY_WRITE, actor.role) &&
+        MAY_WRITE[actor.role as StaffRole].includes(input.action)
+  if (!allowed) throw new ResourceNotFoundError()
 
-  if (!allowed) {
-    throw new ResourceNotFoundError()
+  // 4. Object-level check, only when no actor was passed in and the record
+  //    already exists. A create has no existing row to look up.
+  if (!input.actor && input.action !== 'create') {
+    const supabase = getAuthedServerClient()
+    const lookup =
+      input.kind === 'player'
+        ? await supabase.from('players').select('id').eq('id', resourceId).maybeSingle()
+        : await supabase.from('scouting_events').select('id').eq('id', resourceId).maybeSingle()
+    if (lookup.error || !lookup.data) throw new ResourceNotFoundError()
   }
 
-  if (action === 'create') return { staffId: user.id, resourceId, role: profile.role }
-
-  // 5. Object-level check: read the one row with the user-scoped client.
-  //    If row-level security hides it, there is no row, so deny.
-  //    Do not retry with a more powerful client.
-  const lookup =
-    input.kind === 'player'
-      ? await supabase.from('players').select('id').eq('id', resourceId).maybeSingle()
-      : await supabase.from('scouting_events').select('id').eq('id', resourceId).maybeSingle()
-
-  if (lookup.error || !lookup.data) throw new ResourceNotFoundError()
-
-    return { staffId: user.id, resourceId, role: profile.role }
+  return { staffId: actor.staffId, resourceId, role: actor.role }
 }
 
 // Collection-level gate: may this signed-in role read this KIND of record at all?
