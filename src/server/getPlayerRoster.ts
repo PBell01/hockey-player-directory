@@ -2,9 +2,15 @@
 // map the answer. No database access and no roster rules live here.
 
 import { createServerFn } from '@tanstack/react-start'
-import { readPlayerRosterForStaff, type PlayerRosterView } from '../services/playerRosterService'
-import { getStaffActor } from './authorizeResource'
-import { csrfBlockResponse } from './csrf'
+
+type PlayerRosterView = {
+  playerId: string
+  name: string
+  number: number | null
+  position: string | null
+  team: string | null
+  notes?: string | null
+}
 
 export type PlayerRosterResponse =
   | { ok: true; player: PlayerRosterView }
@@ -31,39 +37,13 @@ export async function readPlayerRoster(
   rawPlayerId: unknown,
   options: { changesData?: boolean; request?: Request } = {},
 ): Promise<PlayerRosterResponse> {
-  const parsed = parsePlayerId(rawPlayerId)
-  if (!parsed.ok) return parsed
-
-  if (options.changesData) {
-    if (!options.request) return { ok: false, error: 'Could not load this player.' }
-    if (csrfBlockResponse(options.request)) {
-      return { ok: false, error: 'Request was refused.' }
-    }
-  }
-
-  try {
-    // Who is asking comes from the server session, never from the caller.
-    const actor = await getStaffActor()
-    const result = await readPlayerRosterForStaff(actor, parsed.playerId)
-
-    switch (result.outcome) {
-      case 'allowed':
-        return { ok: true, player: result.view }
-      case 'missing_id':
-        return { ok: false, error: 'Player id is not valid.' }
-      default:
-        // not_allowed and not_found look the same, so another player's id
-        // is never confirmed to exist.
-        return { ok: false, error: 'Player not found.' }
-    }
-  } catch {
-    // Never return error.message or a stack trace to the browser.
-    return { ok: false, error: 'Could not load this player.' }
-  }
+  const { readPlayerRoster: readOnServer } = await import('./getPlayerRoster.server')
+  return readOnServer(rawPlayerId, options)
 }
 
 export const getPlayerRoster = createServerFn({ method: 'GET' })
   .validator((input: { playerId: unknown }) => input)
   .handler(async ({ data }): Promise<PlayerRosterResponse> => {
-    return readPlayerRoster(data.playerId)
+    const { readPlayerRoster: readOnServer } = await import('./getPlayerRoster.server')
+    return readOnServer(data.playerId)
   })
