@@ -16,6 +16,9 @@ export type { StaffActor }
 export type PlayerRosterView = {
   playerId: string
   name: string
+  number: number | null
+  position: string | null
+  team: string | null
   notes?: string | null
 }
 
@@ -54,8 +57,11 @@ export async function readPlayerRosterForStaff(
 
   // 5. Build the view by naming fields. Never spread or return the raw row.
   const view: PlayerRosterView = {
-    playerId: record.id,
-    name: record.name,
+  playerId: record.id,
+  name: record.name,
+    number: null,
+    position: record.position,
+    team: record.team_org_label,
   }
   if (mayLearnConfidential) {
     view.notes = record.notes

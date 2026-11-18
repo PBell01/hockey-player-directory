@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { NotFoundPlayer } from '../../components/NotFoundPlayer'
 import { parsePlayerIdParam } from '../../lib/playerParams'
-import { getPlayerById } from '../../server/directoryLoader'
+import { getPlayerRoster } from '../../server/getPlayerRoster'
 
 export const Route = createFileRoute('/players/$playerId')({
   params: {
@@ -12,19 +12,20 @@ export const Route = createFileRoute('/players/$playerId')({
       playerId: parsePlayerIdParam(parsed.playerId),
     }),
   },
-  loader: ({ params }) => {
-    return getPlayerById(params.playerId)
+  loader: async ({ params }) => {
+    return getPlayerRoster({ data: { playerId: params.playerId } })
   },
   component: PlayerDetailPage,
 })
 
 function PlayerDetailPage() {
-  const player = Route.useLoaderData()
+  const result = Route.useLoaderData()
   const { playerId } = Route.useParams()
 
-  if (!player) {
+  if (result == null || result.ok === false || result.player == null) {
     return <NotFoundPlayer playerId={playerId} />
   }
+  const player = result.player
 
   return (
     <main className="mx-auto max-w-3xl p-6">
@@ -47,7 +48,7 @@ function PlayerDetailPage() {
       <dl className="mt-4 space-y-2 text-slate-700">
         <div>
           <dt className="font-semibold">Player ID</dt>
-          <dd>{player.id}</dd>
+          <dd>{player.playerId}</dd>
         </div>
         <div>
           <dt className="font-semibold">Number</dt>
